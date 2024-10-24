@@ -62,16 +62,9 @@ jobs:
      - name: Install iverilog
        shell: bash
        run: |
-          sudo apt-get update
-          sudo apt-get install -y bison flex gperf libbz2-dev
-          git clone https://github.com/steveicarus/iverilog
-          cd iverilog
-          git checkout d8c3c51ab1190ed3fb26540d7de6177f83e0e75b
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          sh autoconf.sh
-          ./configure
-          make
-          sudo make install
+          wget https://github.com/htfab/iverilog/releases/download/13.0-git-d8c3c51/iverilog_13.0-git-d8c3c51a-1_amd64.deb
+          sudo apt-get update -y
+          sudo apt-get install -y ./iverilog_13.0-git-d8c3c51a-1_amd64.deb
 
      - name: Run tests
        shell: bash
