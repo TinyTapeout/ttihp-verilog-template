@@ -25,5 +25,6 @@
       "dockerDashComposeVersion": "none"
     }
   },
+  "postCreateCommand": "echo 'source /ttsetup/venv/bin/activate' >> ~/.bashrc",
   "postStartCommand": "/ttsetup/copy_tt_support_tools.sh"
 }

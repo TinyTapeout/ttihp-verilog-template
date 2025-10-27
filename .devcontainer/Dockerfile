@@ -1,4 +1,4 @@
-ARG VARIANT=ubuntu-22.04
+ARG VARIANT=ubuntu-24.04
 FROM mcr.microsoft.com/vscode/devcontainers/base:${VARIANT}
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -16,10 +16,8 @@ RUN git clone -b ${TT_SUPPORT_TOOLS_BRANCH} https://github.com/TinyTapeout/tt-su
 COPY test/requirements.txt /ttsetup/test_requirements.txt
 COPY .devcontainer/copy_tt_support_tools.sh /ttsetup
 
-RUN pip3 install -r /ttsetup/test_requirements.txt -r /ttsetup/tt-support-tools/requirements.txt
-
-# Clone the IHP PDK
-RUN git clone -b tt2025 https://github.com/TinyTapeout/IHP-Open-PDK ${PDK_ROOT}
+RUN python -m venv /ttsetup/venv
+RUN /ttsetup/venv/bin/pip install -r /ttsetup/test_requirements.txt -r /ttsetup/tt-support-tools/requirements.txt
 
 # Install verible (for formatting)
 RUN umask 022 && \
@@ -28,4 +26,4 @@ RUN umask 022 && \
     chmod 755 /usr/local/bin
 
 # Install LibreLane
-RUN pip3 install librelane==3.0.0.dev44
+RUN /ttsetup/venv/bin/pip install librelane==3.0.0.dev44
