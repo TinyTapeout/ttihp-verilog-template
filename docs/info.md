@@ -1,20 +1,48 @@
-<!---
-
-This file is used to generate your project datasheet. Please fill in the information below and delete any unused
-sections.
-
-You can also include images in this folder and reference them in the markdown. Each image must be less than
-512 kb in size, and the combined size of all images must be less than 1 MB.
--->
-
 ## How it works
 
-Explain how your project works
+ZIRH is a radiation-hardening experiment SoC on SKY130. A TMR-protected SERV
+(RV32I, bit-serial) core runs housekeeping firmware from mask ROM, controls
+the peripherals over a lightweight bus, and streams SEU statistics out as
+UART telemetry.
+
+## Block Diagram
+
+```
+                 ┌─────────────────────────────────────────────────┐
+                 │                 tt_um_hma_zirh                  │
+  clk ──►┌───────┴──────┐                                          │
+  rst_n─►│ zirh_clk_rst │ (TMR)                                    │
+         └───────┬──────┘                                          │
+                 │ div. clk                                        │
+   ┌─────────────┴───────────── zirh_bus (Wishbone-lite) ────────┐ │
+   │        │         │        │        │       │        │       │ │
+┌──┴───┐ ┌──┴───┐ ┌───┴──┐ ┌───┴───┐ ┌──┴──┐ ┌──┴───┐ ┌──┴────┐  │ │
+│ SERV │ │ ROM  │ │ RAM  │ │RS422/ │ │ CAN │ │ SPW  │ │ NPU   │  │ │
+│(TMR) │ │(mask)│ │+ECC  │ │UART   │ │ctrl │ │lite  │ │int8MAC│  │ │
+└──────┘ └──────┘ └──────┘ └──┬────┘ └──┬──┘ └──┬───┘ └───────┘  │ │
+                              │         │       │                │ │
+   ┌──────────────┐  ┌────────┴─────┐   │       │                │ │
+   │ zirh_seu_mon │  │ zirh_sram_dut│   ▼       ▼                │ │
+   │ FF chains,   │  │ OpenRAM macro│  CAN_TX  SPW_DOUT/SOUT     │ │
+   │ counters     │  │ + scan FSM   │  CAN_RX  SPW_DIN/SIN       │ │
+   └──────────────┘  └──────────────┘                            │ │
+                 └───────────────────────────────────────────────┘ │
+                 └─────────────────────────────────────────────────┘
+```
+
+## Memory Map
+
+| Base       | Size | Block         | Notes                          |
+|------------|------|---------------|--------------------------------|
+| 0x0000_0000| 2 KB | ROM           | firmware (mask ROM, case-gen)  |
+| 0x0000_1000| 256B | RAM           | ECC-protected DFF RAM          |
+| 0x0000_2000| 32B  | UART/RS422    | data, status, baud div         |
+| 0x0000_2100| 64B  | CAN           | ctrl, status, TX/RX buffers    |
+| 0x0000_2200| 64B  | SpaceWire     | link ctrl/status, data         |
+| 0x0000_2300| 64B  | NPU           | weights, activations, result   |
+| 0x0000_2400| 64B  | SEU monitor   | counters, inject, mode         |
+| 0x0000_2500| 64B  | SRAM DUT      | scan ctrl, flip count/addr log |
 
 ## How to test
 
-Explain how to use your project
-
-## External hardware
-
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+(reset → HEARTBEAT toggles → telemetry frames on TLM_TX @115200 8N1 ...)
