@@ -41,30 +41,31 @@ The GitHub action will automatically build the ASIC files using [LibreLane](http
   - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
   - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
  
-  ## Hierarchy
+## Hierarchy
 
-  zirh/                          # tt-verilog-template fork'u
-  ├── info.yaml                  # ← source_files listesi = hiyerarşinin resmi kaydı
-  ├── src/
-  │   ├── tt_um_hma_zirh.v       # top: pin bağlantıları + modül instantiation
-  │   ├── zirh_clk_rst.v
-  │   ├── zirh_tmr_lib.v         # voter, tmr_reg makroları
-  │   ├── zirh_bus.v
-  │   ├── serv/                  # SERV'i git submodule ya da vendor kopyası olarak
-  │   ├── zirh_rom.v
-  │   ├── zirh_ram.v
-  │   ├── zirh_rs422.v
-  │   ├── zirh_can.v
-  │   ├── zirh_spw.v
-  │   ├── zirh_npu.v
-  │   ├── zirh_seu_mon.v
-  │   └── zirh_sram_dut.v
-  ├── test/
-  │   ├── Makefile               # PROJECT_SOURCES ← info.yaml ile senkron
-  │   └── test_*.py              # cocotb testleri (modül başına bir dosya)
-  ├── docs/
-  │   └── info.md                # ← hiyerarşi ŞEMASI buraya: blok diyagram + adres haritası
-  │                              #   (TT datasheet'ine bu dosya girer)
-  ├── fw/                        # SERV firmware (asm/C + ROM üretme scripti)
-  │   └── rom_gen.py             # .hex → zirh_rom.v case-ROM üretici
-  └── config.json / config.tcl   # OpenLane ayarları (macro yerleşimi dahil)
+```
+zirh/                          # tt-verilog-template fork'u
+├── info.yaml                  # source_files listesi = hiyerarşinin resmi kaydı
+├── src/
+│   ├── tt_um_hma_zirh.v       # top: pin bağlantıları + modül instantiation
+│   ├── zirh_clk_rst.v
+│   ├── zirh_tmr_lib.v         # voter, tmr_reg makroları
+│   ├── zirh_bus.v
+│   ├── serv/                  # SERV vendor kopyası
+│   ├── zirh_rom.v
+│   ├── zirh_ram.v
+│   ├── zirh_rs422.v
+│   ├── zirh_can.v
+│   ├── zirh_spw.v
+│   ├── zirh_npu.v
+│   ├── zirh_seu_mon.v
+│   └── zirh_sram_dut.v
+├── test/
+│   ├── Makefile               # PROJECT_SOURCES <- info.yaml ile senkron
+│   └── test_*.py              # cocotb testleri (modül başına bir dosya)
+├── docs/
+│   └── info.md                # blok diyagram + adres haritası (TT datasheet'i)
+├── fw/                        # SERV firmware
+│   └── rom_gen.py             # .hex -> zirh_rom.v case-ROM üretici
+└── config.json                # OpenLane ayarları (macro yerleşimi dahil)
+```
