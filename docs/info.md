@@ -46,3 +46,8 @@ UART telemetry.
 ## How to test
 
 (reset → HEARTBEAT toggles → telemetry frames on TLM_TX @115200 8N1 ...)
+
+
+## External Hardware
+CAN Transceiver + RS422 Transceiver + LVDS Transceiver
+
