@@ -1,71 +1,151 @@
-![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
+# ZIRH
 
-# Tiny Tapeout Verilog Project Template
+**Z**ero-budget **I**rradiation-**R**esistant **H**ardened SoC — an open-source radiation-hardening experiment chip on SKY130.
 
-- [Read the documentation for project](docs/info.md)
+*"Zırh" means "armor" in Turkish.*
 
-## What is Tiny Tapeout?
+> Built with a fully open-source flow, targeting a [Tiny Tapeout](https://tinytapeout.com) SKY130 shuttle. Total budget: a few tiles and a lot of stubbornness.
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+## What is this?
 
-To learn more and get started, visit https://tinytapeout.com.
+ZIRH is a small radiation-hardened SoC designed to *measure* radiation effects, not just survive them. A TMR-protected [SERV](https://github.com/olofk/serv) RISC-V core runs housekeeping firmware from mask ROM, controls a set of spacecraft-flavored peripherals over a lightweight bus, and streams live SEU (Single Event Upset) statistics out as UART telemetry — so the chip can report on its own health while sitting in a radiation beam.
 
-## Set up your Verilog project
+The scientific goal: compare hardened vs. unhardened structures on the same die, under the same beam, at the same time.
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
-
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
-
-## Enable GitHub actions to build the results page
-
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
-
-## Resources
-
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
-
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
- 
-## Hierarchy
+## Architecture
 
 ```
-zirh/                          # tt-verilog-template fork'u
-├── info.yaml                  # source_files listesi = hiyerarşinin resmi kaydı
-├── src/
-│   ├── tt_um_hma_zirh.v       # top: pin bağlantıları + modül instantiation
-│   ├── zirh_clk_rst.v
-│   ├── zirh_tmr_lib.v         # voter, tmr_reg makroları
-│   ├── zirh_bus.v
-│   ├── serv/                  # SERV vendor kopyası
-│   ├── zirh_rom.v
-│   ├── zirh_ram.v
-│   ├── zirh_rs422.v
-│   ├── zirh_can.v
-│   ├── zirh_spw.v
-│   ├── zirh_npu.v
-│   ├── zirh_seu_mon.v
-│   └── zirh_sram_dut.v
-├── test/
-│   ├── Makefile               # PROJECT_SOURCES <- info.yaml ile senkron
-│   └── test_*.py              # cocotb testleri (modül başına bir dosya)
-├── docs/
-│   └── info.md                # blok diyagram + adres haritası (TT datasheet'i)
-├── fw/                        # SERV firmware
-│   └── rom_gen.py             # .hex -> zirh_rom.v case-ROM üretici
-└── config.json                # OpenLane ayarları (macro yerleşimi dahil)
+                 ┌─────────────────────────────────────────────────┐
+                 │                 tt_um_hma_zirh                  │
+  clk ──►┌───────┴──────┐                                          │
+  rst_n─►│ zirh_clk_rst │ (TMR)                                    │
+         └───────┬──────┘                                          │
+                 │                                                 │
+   ┌─────────────┴────────── zirh_bus (Wishbone-lite) ───────────┐ │
+   │        │         │        │        │       │        │       │ │
+┌──┴───┐ ┌──┴───┐ ┌───┴──┐ ┌───┴───┐ ┌──┴──┐ ┌──┴───┐ ┌──┴────┐  │ │
+│ SERV │ │ ROM  │ │ RAM  │ │RS422/ │ │ CAN │ │ SpW  │ │ NPU   │  │ │
+│(TMR) │ │(mask)│ │+ECC  │ │UART   │ │ctrl │ │lite  │ │int8MAC│  │ │
+└──────┘ └──────┘ └──────┘ └───────┘ └─────┘ └──────┘ └───────┘  │ │
+                                                                 │ │
+   ┌──────────────┐   ┌───────────────┐                          │ │
+   │ zirh_seu_mon │   │ zirh_sram_dut │                          │ │
+   │ FF chains &  │   │ OpenRAM macro │                          │ │
+   │ SEU counters │   │ + scan FSM    │                          │ │
+   └──────────────┘   └───────────────┘                          │ │
+                 └───────────────────────────────────────────────┘ │
+                 └─────────────────────────────────────────────────┘
 ```
+
+### Blocks
+
+| Block | Description | Hardening |
+|---|---|---|
+| **SERV core** | Bit-serial RV32I, the world's smallest RISC-V | TMR on all state |
+| **ROM** | Mask ROM (synthesized constants), holds firmware | Inherently SEU-immune |
+| **RAM** | Small DFF-based data RAM | Hamming SECDED ECC |
+| **RS422/UART** | Telemetry + command link | TMR control path |
+| **CAN** | CAN 2.0A controller (external transceiver required) | TMR on protocol FSMs |
+| **SpaceWire-lite** | Data-Strobe encoded link, logic-level | TMR on link FSM |
+| **NPU** | Small int8 MAC array | Control TMR'd; **datapath deliberately unprotected** — it is an experiment target |
+| **SEU monitor** | Matched TMR'd / unprotected FF chains + error counters | The measurement instrument itself |
+| **SRAM DUT** | Real 6T SRAM macro with pattern-scan FSM, flip counting and address logging (MBU analysis) | Deliberately unprotected — classic SEU cross-section target |
+
+### Design philosophy
+
+- **Frequency is a hardening parameter.** Timing is closed well above the operating frequency; the chip runs slow on purpose, buying SET immunity and post-TID timing margin for free.
+- **Protect the control, expose the data.** Control paths (FSMs, CPU state) are TMR'd so the chip never goes silent; selected datapaths are left unprotected so there is something to measure.
+- **The chip is its own test bench.** Error injection inputs allow end-to-end validation of every error-handling path on the ground, before beam time is spent.
+
+## Repository structure
+
+```
+zirh/
+├── info.yaml            # Tiny Tapeout project manifest
+├── src/                 # RTL (Verilog) + SERV vendor copy
+├── test/                # cocotb testbenches + Makefile
+├── docs/info.md         # datasheet: block diagram, memory map, how to test
+├── fw/                  # SERV firmware + ROM generator
+└── config.json          # OpenLane configuration
+```
+
+## Getting started
+
+### Prerequisites
+
+- [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite-build) (Yosys, Icarus Verilog, Verilator, GTKWave)
+- Python 3 with `cocotb` and `cocotbext-uart`
+- RISC-V toolchain (`riscv-none-elf-gcc`) for firmware
+
+### Run the tests
+
+```bash
+pip install cocotb cocotbext-uart
+make -B -C test
+```
+
+### Lint
+
+```bash
+verilator --lint-only -Wall src/*.v
+```
+
+### Quick synthesis sanity check
+
+```bash
+yosys -p "read_verilog src/*.v; synth -top tt_um_hma_zirh; stat"
+scripts/check_tmr.sh   # verifies TMR replicas survived synthesis
+```
+
+### Hardening (GDS)
+
+Pushing to `main` triggers the Tiny Tapeout GitHub Actions flow (OpenLane 2, sky130A), producing the GDS, DRC/STA reports and a 3D render as CI artifacts.
+
+## Verification strategy
+
+Priority-driven, honestly scoped:
+
+- **P0 — telemetry, SEU monitor, clock/reset:** fully verified, including cocotb fault-injection campaigns (random bit flips into FFs, recovery checked).
+- **P1 — UART:** fully verified.
+- **P2 — CAN:** loopback + reference-model tests.
+- **P3 — SpaceWire-lite, NPU:** smoke-level (link-up + packet echo; golden-model comparison). Known limitations are documented in `docs/info.md`.
+
+## Status
+
+| Milestone | State |
+|---|---|
+| Repository & CI skeleton | 🚧 |
+| TMR library + clock/reset | 🚧 |
+| UART + telemetry | ⬜ |
+| SERV integration + firmware "hello" | ⬜ |
+| Peripherals (CAN / SpW / NPU) | ⬜ |
+| SRAM macro integration | ⬜ |
+| Fault-injection campaign | ⬜ |
+| Tapeout (Tiny Tapeout SKY130 shuttle) | ⬜ |
+| Silicon bring-up | ⬜ |
+| Irradiation testing (Co-60 TID) | ⬜ |
+
+## Roadmap after silicon
+
+- FPGA twin (iCE40/ECP5 via Yosys+nextpnr) for hardware fault injection while waiting for the chip
+- Carrier PCB: CAN transceiver, RS422 driver/receiver, optional LVDS for SpaceWire
+- Co-60 total ionizing dose campaign with live SEU telemetry
+- Publication of all measurement data in this repository
+
+## External hardware
+
+- CAN transceiver (e.g. TJA1050) — chip exposes logic-level TX/RX
+- RS422 driver/receiver (e.g. MAX490) — chip exposes logic-level UART
+- Optional LVDS translators for electrically real SpaceWire
+
+## Acknowledgments
+
+Standing on the shoulders of: [SERV](https://github.com/olofk/serv) (Olof Kindgren), [Tiny Tapeout](https://tinytapeout.com) (Matt Venn & team), [OpenRAM](https://openram.org) (VLSIDA), [TMRG](https://tmrg.web.cern.ch) (CERN), the [SkyWater SKY130 PDK](https://github.com/google/skywater-pdk) and the entire open-silicon community.
+
+## License
+
+Apache-2.0 (see `LICENSE`). Vendored components retain their original licenses.
+
+---
+
+*ZIRH is a research/education project. It is not flight-qualified hardware — it is the chip you build so that one day you know how to build that one.*
