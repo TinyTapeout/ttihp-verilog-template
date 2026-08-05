@@ -1,10 +1,10 @@
 # ZIRH
 
-**Z**ero-budget **I**rradiation-**R**esistant **H**ardened SoC — an open-source radiation-hardening experiment chip on SKY130.
+**Z**ero-budget **I**rradiation-**R**esistant **H**ardened SoC — an open-source radiation-hardening experiment chip on IHP SG13G2.
 
 *"Zırh" means "armor" in Turkish.*
 
-> Built with a fully open-source flow, targeting a [Tiny Tapeout](https://tinytapeout.com) SKY130 shuttle. Total budget: a few tiles and a lot of stubbornness.
+> Built with a fully open-source flow, targeting the [Tiny Tapeout](https://tinytapeout.com) TTIHP26b shuttle on IHP SG13G2. Total budget: a few tiles and a lot of stubbornness.
 
 ## What is this?
 
@@ -30,8 +30,8 @@ The scientific goal: compare hardened vs. unhardened structures on the same die,
                                                                  │ │
    ┌──────────────┐   ┌───────────────┐                          │ │
    │ zirh_seu_mon │   │ zirh_sram_dut │                          │ │
-   │ FF chains &  │   │ OpenRAM macro │                          │ │
-   │ SEU counters │   │ + scan FSM    │                          │ │
+   │ FF chains &  │   │ SRAM macro    │                          │ │
+   │ SEU counters │   │ (foundry 1KB) │                          │ │
    └──────────────┘   └───────────────┘                          │ │
                  └───────────────────────────────────────────────┘ │
                  └─────────────────────────────────────────────────┘
@@ -49,7 +49,7 @@ The scientific goal: compare hardened vs. unhardened structures on the same die,
 | **SpaceWire-lite** | Data-Strobe encoded link, logic-level | TMR on link FSM |
 | **NPU** | Small int8 MAC array | Control TMR'd; **datapath deliberately unprotected** — it is an experiment target |
 | **SEU monitor** | Matched TMR'd / unprotected FF chains + error counters | The measurement instrument itself |
-| **SRAM DUT** | Real 6T SRAM macro with pattern-scan FSM, flip counting and address logging (MBU analysis) | Deliberately unprotected — classic SEU cross-section target |
+| **SRAM DUT** | Foundry-provided 1 KB 6T SRAM macro with pattern-scan FSM, flip counting and address logging (MBU analysis) | Deliberately unprotected — classic SEU cross-section target |
 
 ### Design philosophy
 
@@ -99,7 +99,7 @@ scripts/check_tmr.sh   # verifies TMR replicas survived synthesis
 
 ### Hardening (GDS)
 
-Pushing to `main` triggers the Tiny Tapeout GitHub Actions flow (OpenLane 2, sky130A), producing the GDS, DRC/STA reports and a 3D render as CI artifacts.
+Pushing to `main` triggers the Tiny Tapeout GitHub Actions flow (LibreLane, ihp-sg13g2), producing the GDS, DRC/STA reports and a 3D render as CI artifacts.
 
 ## Verification strategy
 
@@ -121,7 +121,7 @@ Priority-driven, honestly scoped:
 | Peripherals (CAN / SpW / NPU) | ⬜ |
 | SRAM macro integration | ⬜ |
 | Fault-injection campaign | ⬜ |
-| Tapeout (Tiny Tapeout SKY130 shuttle) | ⬜ |
+| Tapeout (Tiny Tapeout TTIHP26b shuttle) | ⬜ |
 | Silicon bring-up | ⬜ |
 | Irradiation testing (Co-60 TID) | ⬜ |
 
@@ -140,7 +140,7 @@ Priority-driven, honestly scoped:
 
 ## Acknowledgments
 
-Standing on the shoulders of: [SERV](https://github.com/olofk/serv) (Olof Kindgren), [Tiny Tapeout](https://tinytapeout.com) (Matt Venn & team), [OpenRAM](https://openram.org) (VLSIDA), [TMRG](https://tmrg.web.cern.ch) (CERN), the [SkyWater SKY130 PDK](https://github.com/google/skywater-pdk) and the entire open-silicon community.
+Standing on the shoulders of: [SERV](https://github.com/olofk/serv) (Olof Kindgren), [Tiny Tapeout](https://tinytapeout.com) (Matt Venn & team), [TMRG](https://tmrg.web.cern.ch) (CERN), the [IHP Open PDK](https://github.com/IHP-GmbH/IHP-Open-PDK) (IHP Microelectronics) and the entire open-silicon community.
 
 ## License
 
