@@ -1,7 +1,6 @@
 # ZIRH
 
-**Z**ero-budget **I**rradiation-**R**esistant **H**ardened SoC — an open-source radiation-hardening experiment chip on IHP SG13G2.
-
+Open-source rad-hard-by-design SoC with in-silicon SEU instrumentation, on IHP SG13G2 130 nm.
 *"Zırh" means "armor" in Turkish.*
 
 > Built with a fully open-source flow, targeting the [Tiny Tapeout](https://tinytapeout.com) TTIHP26b shuttle on IHP SG13G2. Total budget: a few tiles and a lot of stubbornness.
