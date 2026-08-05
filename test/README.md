@@ -1,47 +1,47 @@
-# Sample testbench for a Tiny Tapeout project
+# ZIRH — Test Suite
 
-This is a sample testbench for a Tiny Tapeout project. It uses [cocotb](https://docs.cocotb.org/en/stable/) to drive the DUT and check the outputs.
-See below to get started or for more information, check the [website](https://tinytapeout.com/hdl/testing/).
+Tests are written in [cocotb](https://www.cocotb.org/) and run with Icarus Verilog.
 
-## Setting up
+## Setup
 
-1. Edit [Makefile](Makefile) and modify `PROJECT_SOURCES` to point to your Verilog files.
-2. Edit [tb.v](tb.v) and replace `tt_um_example` with your module name.
+```sh
+pip install cocotb cocotbext-uart pytest
+```
 
-## How to run
+## Integration test (full chip via TT harness)
 
-To run the RTL simulation:
+Drives `tt_um_hma_zirh` through the Tiny Tapeout testbench (`tb.v`):
 
 ```sh
 make -B
 ```
 
-To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
+## Unit tests
 
-Then run:
-
-```sh
-make -B GATES=yes
-```
-
-If you wish to save the waveform in VCD format instead of FST format, edit tb.v to use `$dumpfile("tb.vcd");` and then run:
+Each core block has a standalone makefile (no TT harness, DUT driven directly):
 
 ```sh
-make -B FST=
+make -B -f Makefile.tmr     # TMR register: voter, self-healing, 200-shot fault injection
+# (more will follow: Makefile.uart, Makefile.ecc, ...)
 ```
 
-This will generate `tb.vcd` instead of `tb.fst`.
-
-## How to view the waveform file
-
-Using GTKWave
+## Waveforms
 
 ```sh
-gtkwave tb.fst tb.gtkw
+make -B WAVES=1
+gtkwave tb.vcd            # unit tests: see sim_build/ for the dump file
 ```
 
-Using Surfer
+## Synthesis-integrity checks
+
+Simulation passing is NOT enough for TMR — synthesis can silently merge
+replicas (it did once; see git history). After RTL changes run:
 
 ```sh
-surfer tb.fst
+bash ../scripts/check_tmr.sh    # from repo root: scripts/check_tmr.sh
 ```
+
+## Gate-level test
+
+The TT flow's GL test (`GATES=yes`) runs the same cocotb tests against the
+post-synthesis netlist. CI runs it automatically on every push.
