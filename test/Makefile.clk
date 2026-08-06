@@ -1,0 +1,28 @@
+# =============================================================================
+# ZIRH - unit test for zirh_clk_rst (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.clk
+#
+# HB_BIT is overridden to 5 so the heartbeat toggles every 32 cycles and the
+# simulation stays short. test_clk_rst.py hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/clk_rst
+
+# zirh_tmr_lib.v must come first: it defines the voter / TMR FF that
+# zirh_clk_rst instantiates.
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_clk_rst.v
+
+TOPLEVEL = zirh_clk_rst
+COCOTB_TEST_MODULES = test_clk_rst
+
+# Keep in sync with HB_BIT in test_clk_rst.py
+HB_BIT ?= 5
+COMPILE_ARGS += -Pzirh_clk_rst.HB_BIT=$(HB_BIT)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

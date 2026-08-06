@@ -19,4 +19,4 @@ project:
     - "zirh_npu.v"
     - "zirh_seu_mon.v"
     - "zirh_tlm.v"
-    - "zirh_tmr_lib.v"     # voter, TMR FF sarmalayıcıları
+    - "zirh_tmr_lib.v"     # voter, TMR FF wrappers
