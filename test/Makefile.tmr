@@ -1,0 +1,25 @@
+# =============================================================================
+# ZIRH - unit test for zirh_tmr_reg (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.tmr
+#
+# Runs the fault-injection campaign in test_tmr.py: single-replica upsets are
+# masked and detected, the corrupted replica self-heals, and a double upset
+# defeats the voter but is still flagged.
+#
+# WIDTH is left at the module default (8), which is what test_tmr.py assumes
+# when it injects bit flips with `value ^ (1 << randrange(8))`.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/tmr
+
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+
+TOPLEVEL = zirh_tmr_reg
+COCOTB_TEST_MODULES = test_tmr
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

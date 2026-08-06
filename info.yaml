@@ -1,22 +1,69 @@
+# Tiny Tapeout project information
 project:
   title:        "ZIRH"
   author:       "Hasan Melih Akbulut"
   discord:      "__hma"
-  description:  "ZIRH: rad-hard experiment chip - TMR/ECC-protected CAN, SpaceWire-lite, RS422 and NPU with live SEU telemetry on SKY130."
+  description:  "Radiation-hardening experiment chip: TMR-protected clock/reset and heartbeat with SEU mismatch telemetry, on IHP SG13G2."
   language:     "Verilog"
   clock_hz:     20000000
 
+  # A single tile is about 167x108 uM.
+  # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
   tiles: "4x2"
 
+  # Top module name must start with "tt_um_".
+  #
+  # NOTE: src/tt_um_hma_zirh.v does not exist yet. Until it is added here and
+  # to source_files below, the GDS flow cannot run. The blocks it will wire to
+  # the TT pins (zirh_clk_rst, and the TMR library it builds on) are already
+  # in place and unit-tested.
   top_module:  "tt_um_hma_zirh"
 
+  # List your project's source files here.
+  # Source files must be in ./src and you must list each source file
+  # separately, one per line. Order matters: zirh_tmr_lib.v defines the voter
+  # and the TMR register that zirh_clk_rst instantiates.
+  #
+  # PROJECT_SOURCES in test/Makefile carries these same two files, plus
+  # project.v: the TT harness testbench still instantiates the template's
+  # tt_um_example. Both go away when tt_um_hma_zirh.v lands.
   source_files:
-    - "tt_um_hma_zirh.v"
-    - "zirh_clk_rst.v"
-    - "zirh_can.v"
-    - "zirh_spw.v"
-    - "zirh_rs422.v"
-    - "zirh_npu.v"
-    - "zirh_seu_mon.v"
-    - "zirh_tlm.v"
     - "zirh_tmr_lib.v"     # voter, TMR FF wrappers
+    - "zirh_clk_rst.v"     # TMR'd reset synchronizer, heartbeat, tick strobes
+
+# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
+# This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
+# To be filled in once tt_um_hma_zirh.v defines the actual pin assignment.
+pinout:
+  # Inputs
+  ui[0]: ""
+  ui[1]: ""
+  ui[2]: ""
+  ui[3]: ""
+  ui[4]: ""
+  ui[5]: ""
+  ui[6]: ""
+  ui[7]: ""
+
+  # Outputs
+  uo[0]: ""
+  uo[1]: ""
+  uo[2]: ""
+  uo[3]: ""
+  uo[4]: ""
+  uo[5]: ""
+  uo[6]: ""
+  uo[7]: ""
+
+  # Bidirectional pins
+  uio[0]: ""
+  uio[1]: ""
+  uio[2]: ""
+  uio[3]: ""
+  uio[4]: ""
+  uio[5]: ""
+  uio[6]: ""
+  uio[7]: ""
+
+# Do not change!
+yaml_version: 6
