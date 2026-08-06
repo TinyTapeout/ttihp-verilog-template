@@ -102,6 +102,70 @@ module tt_um_hma_zirh (
     end
   end
 
+  // --- SEU monitor ----------------------------------------------------------
+  // Control pins (all level signals from the bench / RP2040, so each one is
+  // 2-FF synchronized; INJ and CLEAR are additionally edge-detected so a
+  // held-high pin fires exactly once):
+  //
+  //   ui[1:0] SEL      counter select: 0 plain, 1 raw, 2 escape, 3 signature
+  //   ui[2]   SEL_HI   0: low byte on uio, 1: high byte
+  //   ui[4]   MODE0    pattern: 00 zeros, 01 ones, 1x checkerboard
+  //   ui[5]   MODE1
+  //   ui[6]   INJ      rising edge injects into the target SEL points at:
+  //                    sel 0 -> plain chain, 1 -> one TMR replica,
+  //                    sel 2 -> all three replicas (escape path)
+  //   ui[7]   CLEAR    rising edge zeroes the counters
+  //
+  // KNOWN LIMITATION: the input synchronizers are plain flops. An upset there
+  // can fabricate one INJ or CLEAR edge. During beam campaigns the control
+  // lines are grounded externally; a spurious CLEAR is visible in telemetry
+  // as a counter drop, a spurious INJ as exactly +1.
+  wire [6:0] ctl_pins = {ui_in[7], ui_in[6], ui_in[5], ui_in[4],
+                         ui_in[2], ui_in[1], ui_in[0]};
+  reg  [6:0] ctl_meta, ctl_q, ctl_prev;
+  always @(posedge clk) begin
+    if (!rst_n_sys) begin
+      ctl_meta <= 7'b0;
+      ctl_q    <= 7'b0;
+      ctl_prev <= 7'b0;
+    end else begin
+      ctl_meta <= ctl_pins;
+      ctl_q    <= ctl_meta;
+      ctl_prev <= ctl_q;
+    end
+  end
+
+  wire [1:0] seu_sel   = ctl_q[1:0];
+  wire       sel_hi    = ctl_q[2];
+  wire [1:0] seu_mode  = ctl_q[4:3];
+  wire       inj_edge  = ctl_q[5] & ~ctl_prev[5];
+  wire       clr_edge  = ctl_q[6] & ~ctl_prev[6];
+
+  wire [15:0] seu_rd;
+  wire        evt_plain, evt_raw, evt_escape, seu_armed, err_infra;
+
+  zirh_seu_mon #(
+      .N  (256),
+      .CW (16)
+  ) u_seu_mon (
+      .clk          (clk),
+      .rst_n        (rst_n_sys),
+      .mode_i       (seu_mode),
+      .clear_i      (clr_edge),
+      .inj_plain_i  (inj_edge & (seu_sel == 2'd0)),
+      .inj_tmr_i    (inj_edge & (seu_sel == 2'd1)),
+      .inj_escape_i (inj_edge & (seu_sel == 2'd2)),
+      .sel_i        (seu_sel),
+      .rd_data_o    (seu_rd),
+      .evt_plain_o  (evt_plain),
+      .evt_raw_o    (evt_raw),
+      .evt_escape_o (evt_escape),
+      .armed_o      (seu_armed),
+      .err_infra_o  (err_infra)
+  );
+
+  wire seu_evt = evt_plain | evt_raw | evt_escape;
+
   //  uo[0] HEARTBEAT     ~1.2 Hz toggle - clock, reset and TMR counter alive
   //  uo[1] TICK_DIV16    1-cycle strobe every 16 clocks
   //  uo[2] TICK_DIV256   1-cycle strobe every 256 clocks
@@ -109,15 +173,19 @@ module tt_um_hma_zirh (
   //  uo[4] UART_TX       echo of every byte received on ui[3]
   //  uo[5] ERR_UART      TMR replica mismatch in the UART counters
   //  uo[6] RX_FERR       1-cycle pulse: broken frame on the RX line
-  assign uo_out = {1'b0, rx_ferr, err_uart, uart_tx,
+  //  uo[7] SEU_EVT       1-cycle pulse per monitor event (scope the beam live)
+  assign uo_out = {seu_evt, rx_ferr, err_uart, uart_tx,
                    err_hb, tick_div256, tick_div16, heartbeat};
 
-  // No bidirectional pins in use yet: drive low, keep all of them as inputs.
-  assign uio_out = 8'h00;
-  assign uio_oe  = 8'h00;
+  // uio[7:0] = RD_DATA: the byte of the selected counter (SEL, SEL_HI).
+  // Outputs once the synchronized reset releases; inputs during reset.
+  assign uio_out = sel_hi ? seu_rd[15:8] : seu_rd[7:0];
+  assign uio_oe  = {8{rst_n_sys}};
 
   // Tie off what is not consumed yet, so the linter stays quiet.
-  wire _unused = &{ena, ui_in[7:4], ui_in[2:0], uio_in, 1'b0};
+  // err_infra and seu_armed travel over the telemetry link once zirh_tlm
+  // exists; until then armed is readable in the signature word (SEL=3).
+  wire _unused = &{ena, uio_in, err_infra, seu_armed, 1'b0};
 
 endmodule
 

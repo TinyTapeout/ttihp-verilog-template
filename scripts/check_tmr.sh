@@ -172,10 +172,12 @@ run_check "zirh_seu_mon  (chain + counter replicas)" \
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context
 # where the tool can see that most of its outputs go nowhere.
-# 79 (clk_rst) + 107 (rs422) + 9 (echo pending buffer: 8 data + 1 valid).
+# 79 (clk_rst) + 107 (rs422) + 9 (echo buffer) + 1213 (seu_mon)
+# + 16 control-pin synchronizers (7x3 minus the 5 unused ctl_prev bits
+# the optimizer prunes).
 run_check "tt_um_hma_zirh (top level)" \
-    tt_um_hma_zirh 3 195 zirh_rst_sync_rep \
-    zirh_tmr_lib.v zirh_clk_rst.v zirh_rs422.v tt_um_hma_zirh.v
+    tt_um_hma_zirh 3 1424 zirh_rst_sync_rep \
+    zirh_tmr_lib.v zirh_clk_rst.v zirh_rs422.v zirh_seu_mon.v tt_um_hma_zirh.v
 
 echo "------------------------------"
 if [ "${failures}" -eq 0 ]; then
