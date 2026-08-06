@@ -144,7 +144,18 @@ run_check "zirh_clk_rst  (reset-sync replicas)" \
     zirh_clk_rst 3 79 zirh_rst_sync_rep \
     zirh_tmr_lib.v zirh_clk_rst.v
 
-# --- check 3: the module that actually gets taped out ----------------------
+# --- check 3: the UART -----------------------------------------------------
+# zirh_rs422 at the default DIV=174:
+#   4 TMR registers in 2 parameterizations (WIDTH=4 and WIDTH=8), so the
+#   library expands to 2 zirh_tmr_ff paramods x 3 replicas = 6 instances.
+#   FFs: (4+8) x 2 directions x 3 replicas = 72 TMR data
+#        + 4 err_o                          =  4
+#        + shift/sync/capture (unprotected) = 31   -> 107 total
+run_check "zirh_rs422    (UART TMR counters)" \
+    zirh_rs422 6 107 zirh_tmr_ff \
+    zirh_tmr_lib.v zirh_rs422.v
+
+# --- check 4: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context

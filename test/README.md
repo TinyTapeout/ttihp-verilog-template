@@ -22,7 +22,9 @@ Each core block has a standalone makefile (no TT harness, DUT driven directly):
 
 ```sh
 make -B -f Makefile.tmr     # TMR register: voter, self-healing, 200-shot fault injection
-# (more will follow: Makefile.uart, Makefile.ecc, ...)
+make -B -f Makefile.clk     # clock/reset: sync latency, upset masking, tick rates
+make -B -f Makefile.rs422   # UART: checked against cocotbext-uart, fault injection
+# (more will follow: Makefile.ecc, ...)
 ```
 
 ## Waveforms

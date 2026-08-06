@@ -1,0 +1,27 @@
+# =============================================================================
+# ZIRH - unit test for zirh_rs422 (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.rs422
+#
+# DIV is overridden to 20 so a frame is 200 clocks instead of 1740.
+# test_rs422.py hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/rs422
+
+# zirh_tmr_lib.v first: it defines the TMR register zirh_rs422 instantiates.
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_rs422.v
+
+TOPLEVEL = zirh_rs422
+COCOTB_TEST_MODULES = test_rs422
+
+# Keep in sync with DIV in test_rs422.py
+DIV ?= 20
+COMPILE_ARGS += -Pzirh_rs422.DIV=$(DIV)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim
