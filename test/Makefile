@@ -9,9 +9,9 @@ SRC_DIR = $(PWD)/../src
 # Keep in sync with source_files in ../info.yaml.
 # zirh_tmr_lib.v must precede zirh_clk_rst.v, which instantiates the voter
 # and the TMR register from it.
-PROJECT_SOURCES = project.v
-PROJECT_SOURCES += zirh_tmr_lib.v
+PROJECT_SOURCES = zirh_tmr_lib.v
 PROJECT_SOURCES += zirh_clk_rst.v
+PROJECT_SOURCES += tt_um_hma_zirh.v
 
 ifneq ($(GATES),yes)
 

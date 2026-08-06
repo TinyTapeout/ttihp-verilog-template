@@ -12,11 +12,6 @@ project:
   tiles: "4x2"
 
   # Top module name must start with "tt_um_".
-  #
-  # NOTE: src/tt_um_hma_zirh.v does not exist yet. Until it is added here and
-  # to source_files below, the GDS flow cannot run. The blocks it will wire to
-  # the TT pins (zirh_clk_rst, and the TMR library it builds on) are already
-  # in place and unit-tested.
   top_module:  "tt_um_hma_zirh"
 
   # List your project's source files here.
@@ -24,16 +19,16 @@ project:
   # separately, one per line. Order matters: zirh_tmr_lib.v defines the voter
   # and the TMR register that zirh_clk_rst instantiates.
   #
-  # PROJECT_SOURCES in test/Makefile carries these same two files, plus
-  # project.v: the TT harness testbench still instantiates the template's
-  # tt_um_example. Both go away when tt_um_hma_zirh.v lands.
+  # Keep in sync with PROJECT_SOURCES in test/Makefile.
   source_files:
-    - "zirh_tmr_lib.v"     # voter, TMR FF wrappers
-    - "zirh_clk_rst.v"     # TMR'd reset synchronizer, heartbeat, tick strobes
+    - "zirh_tmr_lib.v"       # voter, TMR FF wrappers
+    - "zirh_clk_rst.v"       # TMR'd reset synchronizer, heartbeat, tick strobes
+    - "tt_um_hma_zirh.v"     # top level
 
-# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
+# The pinout of your project. Leave unused pins blank. DO NOT delete any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
-# To be filled in once tt_um_hma_zirh.v defines the actual pin assignment.
+# Inputs and bidirectional pins are unassigned on purpose: the peripherals
+# that will claim them are not designed yet.
 pinout:
   # Inputs
   ui[0]: ""
@@ -46,10 +41,10 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
+  uo[0]: "HEARTBEAT"
+  uo[1]: "TICK_DIV16"
+  uo[2]: "TICK_DIV256"
+  uo[3]: "ERR_HB"
   uo[4]: ""
   uo[5]: ""
   uo[6]: ""

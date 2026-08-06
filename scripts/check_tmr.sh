@@ -144,6 +144,16 @@ run_check "zirh_clk_rst  (reset-sync replicas)" \
     zirh_clk_rst 3 79 zirh_rst_sync_rep \
     zirh_tmr_lib.v zirh_clk_rst.v
 
+# --- check 3: the module that actually gets taped out ----------------------
+# The two checks above verify the blocks in isolation. This one verifies the
+# top level, which is the only netlist that matters: a block can survive on
+# its own and still be optimised away once it is instantiated in a context
+# where the tool can see that most of its outputs go nowhere.
+# Same 79 FFs - the top adds only wiring and constants.
+run_check "tt_um_hma_zirh (top level)" \
+    tt_um_hma_zirh 3 79 zirh_rst_sync_rep \
+    zirh_tmr_lib.v zirh_clk_rst.v tt_um_hma_zirh.v
+
 echo "------------------------------"
 if [ "${failures}" -eq 0 ]; then
     echo "PASS: all hardening structures survived synthesis"
