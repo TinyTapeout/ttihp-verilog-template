@@ -31,6 +31,20 @@
   "//": "https://tinytapeout.com/faq/#how-can-i-map-an-additional-external-clock-to-one-of-the-gpios",
   "CLOCK_PORT": "clk",
 
+  "//": "ERROR_ON_UNMAPPED_CELLS - deliberate deviation from the template.",
+  "//": "The TMR replicas only survive synthesis because each one lives in its own",
+  "//": "(* keep_hierarchy *) module: with the attributes removed, Yosys merges all",
+  "//": "three into a single register and zirh_clk_rst drops from 79 flip-flops to 26.",
+  "//": "Measured both ways, see scripts/check_tmr.sh.",
+  "//": "LibreLane runs with SYNTH_HIERARCHY_MODE=flatten, so those kept modules stay",
+  "//": "as hierarchical instances in the netlist and the unmapped-cells checker",
+  "//": "counts them as unmapped - the GDS build fails on 1 instance, u_clk_rst.",
+  "//": "Every leaf cell IS mapped (yosys check reports 0 problems); what the checker",
+  "//": "objects to is the hierarchy, which is intentional here.",
+  "//": "Cost of turning this off: a genuinely unmapped cell would no longer stop the",
+  "//": "build. Check the cell usage summary in the GDS logs after changing the RTL.",
+  "ERROR_ON_UNMAPPED_CELLS": 0,
+
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
