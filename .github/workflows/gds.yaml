@@ -39,6 +39,10 @@ jobs:
 
   viewer:
     needs: gds
+    # The github-pages environment only allows deployments from main (the
+    # published GDS viewer must not be overwritten by work branches), so
+    # running this job on other branches can only ever fail.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       pages: write # to deploy to Pages
