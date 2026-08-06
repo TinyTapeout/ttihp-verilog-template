@@ -1,0 +1,27 @@
+# =============================================================================
+# ZIRH - unit test for zirh_seu_mon (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.seu
+#
+# N is overridden to 16 so warm-up is 20 cycles and a flipped bit crosses
+# the ring in at most 16. test_seu_mon.py hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/seu
+
+# zirh_tmr_lib.v first: the monitor builds on zirh_tmr_ff/voter/tmr_reg.
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_seu_mon.v
+
+TOPLEVEL = zirh_seu_mon
+COCOTB_TEST_MODULES = test_seu_mon
+
+# Keep in sync with N in test_seu_mon.py
+N ?= 16
+COMPILE_ARGS += -Pzirh_seu_mon.N=$(N)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

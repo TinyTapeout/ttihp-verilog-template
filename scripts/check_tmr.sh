@@ -155,7 +155,19 @@ run_check "zirh_rs422    (UART TMR counters)" \
     zirh_rs422 6 107 zirh_tmr_ff \
     zirh_tmr_lib.v zirh_rs422.v
 
-# --- check 4: the module that actually gets taped out ----------------------
+# --- check 4: the SEU monitor ----------------------------------------------
+# zirh_seu_mon at the default N=256, CW=16:
+#   5 zirh_tmr_ff paramods (chain N=256, counters CW=16, mode 2, phase 1,
+#   warm-up 9) x 3 replicas = 15 instances.
+#   FFs: 3x256 TMR chain + 256 plain chain            = 1024
+#        + 3 counters x 16 x 3                        =  144
+#        + (mode 2 + phase 1 + warm 9) x 3            =   36
+#        + 6 err + 3 evt                              =    9   -> 1213 total
+run_check "zirh_seu_mon  (chain + counter replicas)" \
+    zirh_seu_mon 15 1213 zirh_tmr_ff \
+    zirh_tmr_lib.v zirh_seu_mon.v
+
+# --- check 5: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context

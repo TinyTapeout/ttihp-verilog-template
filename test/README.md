@@ -24,6 +24,7 @@ Each core block has a standalone makefile (no TT harness, DUT driven directly):
 make -B -f Makefile.tmr     # TMR register: voter, self-healing, 200-shot fault injection
 make -B -f Makefile.clk     # clock/reset: sync latency, upset masking, tick rates
 make -B -f Makefile.rs422   # UART: checked against cocotbext-uart, fault injection
+make -B -f Makefile.seu     # SEU monitor: all three counters, injection ports, saturation
 # (more will follow: Makefile.ecc, ...)
 ```
 
