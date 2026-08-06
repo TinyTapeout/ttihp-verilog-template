@@ -25,6 +25,7 @@ make -B -f Makefile.tmr     # TMR register: voter, self-healing, 200-shot fault 
 make -B -f Makefile.clk     # clock/reset: sync latency, upset masking, tick rates
 make -B -f Makefile.rs422   # UART: checked against cocotbext-uart, fault injection
 make -B -f Makefile.seu     # SEU monitor: all three counters, injection ports, saturation
+make -B -f Makefile.tlm     # telemetry framer: frame format, checksum, backpressure
 # (more will follow: Makefile.ecc, ...)
 ```
 

@@ -25,6 +25,7 @@ project:
     - "zirh_clk_rst.v"       # TMR'd reset synchronizer, heartbeat, tick strobes
     - "zirh_rs422.v"         # UART, TMR'd timing control, wired as hardware echo
     - "zirh_seu_mon.v"       # SEU monitor: matched chains, 3 counters, injection
+    - "zirh_tlm.v"           # telemetry framer: 10-byte frames over the UART
     - "tt_um_hma_zirh.v"     # top level
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete any pins.

@@ -222,6 +222,38 @@ async def test_uart_echo(dut):
     assert bit(dut, RX_FERR) == 0, "RX_FERR asserted for clean frames"
 
 
+TLM_INTERVAL = 1 << 16  # top instantiates zirh_tlm with INTERVAL_LOG2=16
+TLM_FRAME_LEN = 10
+
+
+@cocotb.test()
+async def test_telemetry_frame(dut):
+    """After one interval a 10-byte telemetry frame must appear on UART_TX
+    unprompted: sync 'ZR', armed status, all counters zero, valid checksum.
+    This is the chip reporting its own health with no input at all."""
+    await start_and_reset(dut)
+
+    # the frame starts at ~2^16 clocks; _uart_capture's start-bit hunt
+    # needs a timeout larger than that
+    frame = [await _uart_capture(dut, timeout_cycles=TLM_INTERVAL + 30 * UART_DIV)]
+    for _ in range(TLM_FRAME_LEN - 1):
+        frame.append(await _uart_capture(dut, timeout_cycles=30 * UART_DIV))
+
+    assert frame[0] == 0x5A and frame[1] == 0x52, (
+        f"bad sync: {frame[0]:#04x} {frame[1]:#04x}")
+
+    chk = 0
+    for b in frame[:9]:
+        chk ^= b
+    assert frame[9] == chk, f"checksum {frame[9]:#04x}, computed {chk:#04x}"
+
+    status = frame[2]
+    assert (status >> 3) & 1 == 1, "armed bit must be set in telemetry"
+    assert (status >> 2) & 1 == 0, "infra bit must be clear with no fault"
+    assert frame[3:9] == [0, 0, 0, 0, 0, 0], (
+        f"counters must be zero, frame carries {frame[3:9]}")
+
+
 @cocotb.test()
 async def test_heartbeat_is_not_stuck(dut):
     """HEARTBEAT is counter bit 23, so it stays low for the first 2^23 clocks.

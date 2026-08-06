@@ -65,6 +65,13 @@ module zirh_seu_mon #(
     input  wire [1:0]  sel_i,         // counter select for rd_data_o
     output wire [CW-1:0] rd_data_o,
 
+    // parallel counter/state outputs for the telemetry framer (wires only;
+    // the rd_data_o mux stays the pin-facing read port)
+    output wire [CW-1:0] cnt_plain_o,
+    output wire [CW-1:0] cnt_raw_o,
+    output wire [CW-1:0] cnt_escape_o,
+    output wire [1:0]    mode_o,
+
     output wire        evt_plain_o,   // 1-cycle event pulses (bench scope)
     output wire        evt_raw_o,
     output wire        evt_escape_o,
@@ -217,6 +224,11 @@ module zirh_seu_mon #(
         (sel_i == 2'b01) ? cnt_raw_q    :
         (sel_i == 2'b10) ? cnt_escape_q :
         {8'h5A, {(CW-12){1'b0}}, armed, 1'b0, mode_q};
+
+    assign cnt_plain_o  = cnt_plain_q;
+    assign cnt_raw_o    = cnt_raw_q;
+    assign cnt_escape_o = cnt_escape_q;
+    assign mode_o       = mode_q;
 
     reg evt_plain_r, evt_raw_r, evt_escape_r;
     always @(posedge clk) begin

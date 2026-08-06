@@ -13,6 +13,7 @@ PROJECT_SOURCES = zirh_tmr_lib.v
 PROJECT_SOURCES += zirh_clk_rst.v
 PROJECT_SOURCES += zirh_rs422.v
 PROJECT_SOURCES += zirh_seu_mon.v
+PROJECT_SOURCES += zirh_tlm.v
 PROJECT_SOURCES += tt_um_hma_zirh.v
 
 ifneq ($(GATES),yes)

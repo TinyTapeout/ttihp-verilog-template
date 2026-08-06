@@ -167,17 +167,25 @@ run_check "zirh_seu_mon  (chain + counter replicas)" \
     zirh_seu_mon 15 1213 zirh_tmr_ff \
     zirh_tmr_lib.v zirh_seu_mon.v
 
-# --- check 5: the module that actually gets taped out ----------------------
+# --- check 5: the telemetry framer -----------------------------------------
+# zirh_tlm at the default INTERVAL_LOG2=16:
+#   2 zirh_tmr_ff paramods (interval 16, state 5) x 3 = 6 instances.
+#   FFs: (16+5) x 3 TMR = 63, + 2 err, + snapshot/seq/chk/sticky 65 -> 130
+run_check "zirh_tlm      (framer control replicas)" \
+    zirh_tlm 6 130 zirh_tmr_ff \
+    zirh_tmr_lib.v zirh_tlm.v
+
+# --- check 6: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context
 # where the tool can see that most of its outputs go nowhere.
 # 79 (clk_rst) + 107 (rs422) + 9 (echo buffer) + 1213 (seu_mon)
-# + 16 control-pin synchronizers (7x3 minus the 5 unused ctl_prev bits
-# the optimizer prunes).
+# + 130 (tlm) + 16 control-pin synchronizers (7x3 minus the 5 unused
+# ctl_prev bits the optimizer prunes).
 run_check "tt_um_hma_zirh (top level)" \
-    tt_um_hma_zirh 3 1424 zirh_rst_sync_rep \
-    zirh_tmr_lib.v zirh_clk_rst.v zirh_rs422.v zirh_seu_mon.v tt_um_hma_zirh.v
+    tt_um_hma_zirh 3 1554 zirh_rst_sync_rep \
+    zirh_tmr_lib.v zirh_clk_rst.v zirh_rs422.v zirh_seu_mon.v zirh_tlm.v tt_um_hma_zirh.v
 
 echo "------------------------------"
 if [ "${failures}" -eq 0 ]; then

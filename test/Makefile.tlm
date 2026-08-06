@@ -1,0 +1,26 @@
+# =============================================================================
+# ZIRH - unit test for zirh_tlm (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.tlm
+#
+# INTERVAL_LOG2 is overridden to 8 (frame every 256 cycles) so several
+# frames fit in a short simulation. test_tlm.py hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/tlm
+
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tlm.v
+
+TOPLEVEL = zirh_tlm
+COCOTB_TEST_MODULES = test_tlm
+
+# Keep in sync with INTERVAL in test_tlm.py
+INTERVAL_LOG2 ?= 8
+COMPILE_ARGS += -Pzirh_tlm.INTERVAL_LOG2=$(INTERVAL_LOG2)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

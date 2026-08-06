@@ -74,13 +74,22 @@ module tt_um_hma_zirh (
   reg  [7:0] pend_data;
   reg        pend_valid;
 
+  // Telemetry frames win the TX; echo bytes go out in the gaps. At the
+  // silicon interval (2^16 clocks = 3.3 ms) a frame occupies ~27% of the
+  // line, so echo stays usable on the bench. The 1-deep echo buffer can be
+  // overwritten if the host streams during a frame: echo is best-effort,
+  // telemetry is the product.
+  wire [7:0] tlm_data;
+  wire       tlm_valid;
+  wire       err_tlm;
+
   zirh_rs422 #(
       .DIV (174)             // 20 MHz / 174 = 114.9 kBd (115200 -0.22%)
   ) u_uart (
       .clk            (clk),
       .rst_n          (rst_n_sys),
-      .tx_data_i      (pend_data),
-      .tx_valid_i     (pend_valid),
+      .tx_data_i      (tlm_valid ? tlm_data : pend_data),
+      .tx_valid_i     (tlm_valid | pend_valid),
       .tx_ready_o     (tx_ready),
       .rx_data_o      (rx_data),
       .rx_valid_o     (rx_valid),
@@ -97,7 +106,7 @@ module tt_um_hma_zirh (
     end else if (rx_valid) begin
       pend_data  <= rx_data;
       pend_valid <= 1'b1;
-    end else if (pend_valid && tx_ready) begin
+    end else if (pend_valid && tx_ready && !tlm_valid) begin
       pend_valid <= 1'b0;
     end
   end
@@ -142,6 +151,8 @@ module tt_um_hma_zirh (
   wire       clr_edge  = ctl_q[6] & ~ctl_prev[6];
 
   wire [15:0] seu_rd;
+  wire [15:0] cnt_plain, cnt_raw, cnt_escape;
+  wire [1:0]  seu_mode_q;
   wire        evt_plain, evt_raw, evt_escape, seu_armed, err_infra;
 
   zirh_seu_mon #(
@@ -157,11 +168,35 @@ module tt_um_hma_zirh (
       .inj_escape_i (inj_edge & (seu_sel == 2'd2)),
       .sel_i        (seu_sel),
       .rd_data_o    (seu_rd),
+      .cnt_plain_o  (cnt_plain),
+      .cnt_raw_o    (cnt_raw),
+      .cnt_escape_o (cnt_escape),
+      .mode_o       (seu_mode_q),
       .evt_plain_o  (evt_plain),
       .evt_raw_o    (evt_raw),
       .evt_escape_o (evt_escape),
       .armed_o      (seu_armed),
       .err_infra_o  (err_infra)
+  );
+
+  // --- telemetry framer -----------------------------------------------------
+  // 10-byte frame (Z R status plain raw escape checksum) every 2^16 clocks:
+  // 3.3 ms at 20 MHz, ~300 frames/s, 27% of the UART line.
+  zirh_tlm #(
+      .INTERVAL_LOG2 (16)
+  ) u_tlm (
+      .clk          (clk),
+      .rst_n        (rst_n_sys),
+      .cnt_plain_i  (cnt_plain),
+      .cnt_raw_i    (cnt_raw),
+      .cnt_escape_i (cnt_escape),
+      .armed_i      (seu_armed),
+      .mode_i       (seu_mode_q),
+      .err_infra_i  (err_infra),
+      .tx_data_o    (tlm_data),
+      .tx_valid_o   (tlm_valid),
+      .tx_ready_i   (tx_ready),
+      .err_o        (err_tlm)
   );
 
   wire seu_evt = evt_plain | evt_raw | evt_escape;
@@ -183,9 +218,9 @@ module tt_um_hma_zirh (
   assign uio_oe  = {8{rst_n_sys}};
 
   // Tie off what is not consumed yet, so the linter stays quiet.
-  // err_infra and seu_armed travel over the telemetry link once zirh_tlm
-  // exists; until then armed is readable in the signature word (SEL=3).
-  wire _unused = &{ena, uio_in, err_infra, seu_armed, 1'b0};
+  // err_tlm joins the SEU accounting once there is somewhere to count it;
+  // a framer upset that matters is already visible as a bad checksum.
+  wire _unused = &{ena, uio_in, err_tlm, 1'b0};
 
 endmodule
 
