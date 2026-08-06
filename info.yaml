@@ -23,6 +23,7 @@ project:
   source_files:
     - "zirh_tmr_lib.v"       # voter, TMR FF wrappers
     - "zirh_clk_rst.v"       # TMR'd reset synchronizer, heartbeat, tick strobes
+    - "zirh_rs422.v"         # UART, TMR'd timing control, wired as hardware echo
     - "tt_um_hma_zirh.v"     # top level
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete any pins.
@@ -34,7 +35,7 @@ pinout:
   ui[0]: ""
   ui[1]: ""
   ui[2]: ""
-  ui[3]: ""
+  ui[3]: "UART_RX"
   ui[4]: ""
   ui[5]: ""
   ui[6]: ""
@@ -45,9 +46,9 @@ pinout:
   uo[1]: "TICK_DIV16"
   uo[2]: "TICK_DIV256"
   uo[3]: "ERR_HB"
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
+  uo[4]: "UART_TX"
+  uo[5]: "ERR_UART"
+  uo[6]: "RX_FERR"
   uo[7]: ""
 
   # Bidirectional pins

@@ -160,10 +160,10 @@ run_check "zirh_rs422    (UART TMR counters)" \
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context
 # where the tool can see that most of its outputs go nowhere.
-# Same 79 FFs - the top adds only wiring and constants.
+# 79 (clk_rst) + 107 (rs422) + 9 (echo pending buffer: 8 data + 1 valid).
 run_check "tt_um_hma_zirh (top level)" \
-    tt_um_hma_zirh 3 79 zirh_rst_sync_rep \
-    zirh_tmr_lib.v zirh_clk_rst.v tt_um_hma_zirh.v
+    tt_um_hma_zirh 3 195 zirh_rst_sync_rep \
+    zirh_tmr_lib.v zirh_clk_rst.v zirh_rs422.v tt_um_hma_zirh.v
 
 echo "------------------------------"
 if [ "${failures}" -eq 0 ]; then
