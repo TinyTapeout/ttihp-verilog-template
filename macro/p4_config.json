@@ -1,0 +1,41 @@
+{
+  "//": "Phase 4: three hardened replica macros pinned to explicit, far-apart",
+  "//": "coordinates through the MACROS object. Run by p4.yaml.",
+
+  "DESIGN_NAME": "p4_sep_test",
+  "VERILOG_FILES": ["dir::p4_sep_test.v"],
+
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20,
+
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [0, 0, 1000, 600],
+  "PL_TARGET_DENSITY_PCT": 40,
+
+  "//": "Macro origins: a (60,60), b (392,320), c (724,60).",
+  "//": "Pairwise origin distances ~421/421/664 um - two orders of magnitude",
+  "//": "beyond ZIRH-1's tool-placed 3.8-12 um, so the result is unambiguous.",
+  "MACROS": {
+    "zirh_tmr_ff256": {
+      "gds": ["dir::hardened/zirh_tmr_ff256.gds"],
+      "lef": ["dir::hardened/zirh_tmr_ff256.lef"],
+      "nl":  ["dir::hardened/zirh_tmr_ff256.nl.v"],
+      "lib": { "*": ["dir::hardened/lib/zirh_tmr_ff256__nom_typ_1p20V_25C.lib"] },
+      "instances": {
+        "u_ch_a": { "location": [60, 60],   "orientation": "N" },
+        "u_ch_b": { "location": [392, 320], "orientation": "N" },
+        "u_ch_c": { "location": [724, 60],  "orientation": "N" }
+      }
+    }
+  },
+
+  "PDN_MACRO_CONNECTIONS": [
+    "u_ch_a VPWR VGND VPWR VGND",
+    "u_ch_b VPWR VGND VPWR VGND",
+    "u_ch_c VPWR VGND VPWR VGND"
+  ],
+
+  "//": "Same rationale as the other configs: keep_hierarchy islands and",
+  "//": "blackboxed macro instances trip the unmapped-cells checker.",
+  "ERROR_ON_UNMAPPED_CELLS": 0
+}

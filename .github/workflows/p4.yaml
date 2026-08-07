@@ -1,0 +1,105 @@
+# =============================================================================
+# ZIRH - phase 4: enforced replica separation through the MACROS object
+#
+# Hardens macro/p4_config.json (three pre-hardened replica macros at
+# explicit coordinates) and then VERIFIES the flow obeyed: the three macro
+# components must sit in the final DEF exactly where the config put them.
+# Manual trigger only; a ZIRH-2 prototype, not a ZIRH-1 tapeout gate.
+# =============================================================================
+
+name: p4
+
+on:
+  workflow_dispatch:
+
+jobs:
+  separation-test:
+    runs-on: ubuntu-24.04
+    env:
+      PDK_ROOT: /home/runner/pdk
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install LibreLane
+        run: pip install librelane==3.0.5
+
+      - name: Harden the separation test top
+        run: |
+          python -m librelane \
+            --docker-no-tty --dockerized \
+            --pdk-root "$PDK_ROOT" \
+            --pdk ihp-sg13g2 \
+            --run-tag p4 \
+            macro/p4_config.json
+
+      - name: Verify enforced placement
+        run: |
+          python3 - <<'EOF'
+          import json, re, sys
+
+          expected = {  # from macro/p4_config.json, in um
+              "u_ch_a": (60, 60),
+              "u_ch_b": (392, 320),
+              "u_ch_c": (724, 60),
+          }
+
+          text = open("macro/runs/p4/final/def/p4_sep_test.def").read()
+          scale = int(re.search(r"UNITS DISTANCE MICRONS (\d+)", text).group(1))
+
+          got = {}
+          for inst in expected:
+              m = re.search(
+                  rf"- {inst} zirh_tmr_ff256 \+ (\w+) \( (-?\d+) (-?\d+) \)",
+                  text)
+              if not m:
+                  sys.exit(f"FAIL: macro instance {inst} not found in final DEF")
+              got[inst] = (m.group(1),
+                           int(m.group(2)) / scale, int(m.group(3)) / scale)
+
+          fails = 0
+          for inst, (ex, ey) in expected.items():
+              status, x, y = got[inst]
+              ok = abs(x - ex) < 1 and abs(y - ey) < 1
+              print(f"{inst}: {status} ({x:.2f}, {y:.2f})  istenen ({ex}, {ey})"
+                    f"  -> {'OK' if ok else 'MISMATCH'}")
+              fails += not ok
+
+          def dist(p, q):
+              return ((p[0]-q[0])**2 + (p[1]-q[1])**2) ** 0.5
+          pts = {k: (v[1], v[2]) for k, v in got.items()}
+          print(f"pairwise: a-b {dist(pts['u_ch_a'], pts['u_ch_b']):.0f} um, "
+                f"b-c {dist(pts['u_ch_b'], pts['u_ch_c']):.0f} um, "
+                f"a-c {dist(pts['u_ch_a'], pts['u_ch_c']):.0f} um "
+                f"(ZIRH-1 tool-placed baseline: 3.8-12 um)")
+          if fails:
+              sys.exit(f"FAIL: {fails} macro(s) not where the config put them")
+          print("PASS: the flow enforced every requested location")
+          EOF
+
+          echo "=== key metrics ==="
+          python3 - <<'EOF'
+          import json
+          m = json.load(open('macro/runs/p4/final/metrics.json'))
+          for k in ('design__die__area', 'design__instance__utilization',
+                    'timing__setup__ws', 'timing__hold__ws',
+                    'route__drc_errors', 'magic__drc_error__count',
+                    'design__lvs_error__count', 'clock__skew__worst'):
+              if k in m:
+                  print(f"  {k:40s} {m[k]}")
+          EOF
+
+      - name: Upload artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: p4_sep_test
+          path: |
+            macro/runs/p4/final/*
+            macro/runs/p4/*.log
