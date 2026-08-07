@@ -198,6 +198,24 @@ hostile synthetic stream with no hardware.
 | Silicon bring-up | waiting for silicon |
 | Irradiation campaign (Co-60 TID), beam data published here | planned |
 
+## FPGA twin
+
+The same top synthesizes to the Tiny Tapeout demo board FPGA (iCE40UP5K)
+through the `fpga` workflow (run it manually from the Actions tab; the
+bitstream is published as a CI artifact). Measured: 55% of the device,
+fmax ~29 MHz, and the hierarchical netlist carries exactly the same 1554
+flip-flops as the ASIC - every TMR replica survives the FPGA flow too.
+
+The twin runs from the board's 12 MHz clock, not the ASIC's 20 MHz, so
+everything scales by 12/20: the UART runs at 68 966 Bd (not 115 200),
+telemetry frames arrive every 5.5 ms and the heartbeat blinks at ~0.7 Hz.
+The ground station handles this with `--baud 68966`.
+
+What the twin is for: rehearsing the bring-up script, developing the
+ground station against a real serial stream, and hardware-speed fault
+injection through the INJ pin. What it is not: a radiation model - FPGA
+flop physics says nothing about ASIC cross-sections.
+
 ## Roadmap: ZIRH-2
 
 ZIRH-1 fills its tile (61% utilization; the area went to the instrument, as
