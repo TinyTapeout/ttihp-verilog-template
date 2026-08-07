@@ -115,10 +115,19 @@ P2 - explicitly out unless P0+P1 land early and small:
    - FP_DEF_TEMPLATE: copies pin locations and die area only, not
      regions. Not applicable.
 
-   If the macro route fails in prototype, the A/B experiment reshapes
-   around what the flow can express - possibly two separate seu_mon
-   instances at opposite floorplan corners with the coarse separation
-   that IO-pin-driven placement gives for free.
+   **Phase 4 result (2026-08-07): the mechanism is PROVEN end to end.**
+   macro/p4_sep_test.v pins three replica macros to (60,60), (392,320)
+   and (724,60) through the MACROS object; the p4 workflow hardened it
+   and verified the final DEF: all three FIXED within 0.00 um of the
+   request, pairwise separations 422/422/664 um against the tool-placed
+   baseline of 3.8-12 um. DRC (route and Magic) 0, LVS 0. Costs
+   measured: setup slack drops from +11.4 ns (flat ZIRH-1) to +7.7 ns -
+   crossing hundreds of um costs ~3.7 ns, still enormous margin at
+   20 MHz - and the CI runtime rises to ~55 min, dominated by routing
+   1536 macro pins over long spans. The A/B experiment is now
+   designable; remaining open item from the phase audit: cross-macro
+   clock skew was not present in the metrics set and must be pulled
+   from the STA reports during ZIRH-2 integration.
 2. check_tmr.sh extended per block, as in ZIRH-1 (positive + negative).
 3. FPGA twin from day one - SERV firmware development against the twin,
    not against simulation only.
