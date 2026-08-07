@@ -84,10 +84,11 @@ module tt_um_hma_zirh (
   wire       err_tlm;
 
   zirh_rs422 #(
-      .DIV (174)             // 20 MHz / 174 = 114.9 kBd (115200 -0.22%)
+      .DIVW (8)
   ) u_uart (
       .clk            (clk),
       .rst_n          (rst_n_sys),
+      .div_i          (8'd174),  // 20 MHz / 174 = 114.9 kBd (115200 -0.22%)
       .tx_data_i      (tlm_valid ? tlm_data : pend_data),
       .tx_valid_i     (tlm_valid | pend_valid),
       .tx_ready_o     (tx_ready),

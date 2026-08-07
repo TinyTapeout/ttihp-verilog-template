@@ -22,18 +22,21 @@
 //   err_o pulses whenever any TMR replica disagreed - wire it to the SEU
 //   counters like every other err output in the design.
 //
-// No baud-rate register yet: DIV is a synthesis parameter. It becomes a
-// bus-writable register when the bus exists; until then, fixed at
-// 20 MHz / 174 = 114.9 kBd (-0.22% from 115200, well inside 8N1 tolerance).
+// The divisor is a runtime input (div_i): ZIRH-1's top drives it with the
+// constant 174 (20 MHz / 174 = 114.9 kBd, -0.22% from 115200); ZIRH-2's
+// register wrapper drives it from a TMR'd bus-writable register. Changing
+// div_i mid-frame corrupts at most the frame in flight.
 // =============================================================================
 
 `default_nettype none
 
 module zirh_rs422 #(
-    parameter integer DIV = 174   // clk cycles per bit; >= 4
+    parameter integer DIVW = 8    // divisor width; div_i >= 4
 ) (
     input  wire       clk,
     input  wire       rst_n,
+
+    input  wire [DIVW-1:0] div_i, // clk cycles per bit
 
     // TX: byte in, ready/valid
     input  wire [7:0] tx_data_i,
@@ -53,9 +56,9 @@ module zirh_rs422 #(
     output wire       err_o
 );
 
-    localparam integer BW = (DIV <= 2) ? 1 : $clog2(DIV);
-    localparam [BW-1:0] BAUD_MAX = DIV - 1;
-    localparam [BW-1:0] HALF_MAX = DIV / 2 - 1;
+    localparam integer BW = DIVW;
+    wire [BW-1:0] BAUD_MAX = div_i - {{(BW-1){1'b0}}, 1'b1};
+    wire [BW-1:0] HALF_MAX = (div_i >> 1) - {{(BW-1){1'b0}}, 1'b1};
 
     // -------------------------------------------------------------------------
     // TX

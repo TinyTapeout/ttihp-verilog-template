@@ -1,0 +1,27 @@
+# =============================================================================
+# ZIRH-2 - unit test for zirh_uart_regs (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.uregs
+#
+# RESET_DIV is overridden to 20 so frames stay short. test_uart_regs.py
+# hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/uregs
+
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_rs422.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_uart_regs.v
+
+TOPLEVEL = zirh_uart_regs
+COCOTB_TEST_MODULES = test_uart_regs
+
+# Keep in sync with DIV in test_uart_regs.py
+RESET_DIV ?= 20
+COMPILE_ARGS += -Pzirh_uart_regs.RESET_DIV=$(RESET_DIV)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

@@ -182,7 +182,18 @@ run_check "zirh_bus      (watchdog replicas)" \
     zirh_bus 3 19 zirh_tmr_ff \
     zirh_tmr_lib.v zirh_bus.v
 
-# --- check 7: the module that actually gets taped out ----------------------
+# --- check 7: the ZIRH-2 UART register block --------------------------------
+# zirh_uart_regs at RESET_DIV=174: the wrapped rs422 runs DIVW=16, so its
+# 4 TMR counters are 2 paramods (w4, w16) + the BAUD register (w16) = 3
+# paramods x 3 = 9 instances.
+#   FFs: rs422 @16b: (4+16)x2x3=120 TMR + 4 err + 31 plain   = 155
+#        + BAUD 16x3 + 1 err                                 =  49
+#        + sw slot 9 + rx buffer/flags 11                    =  20  -> 224
+run_check "zirh_uart_regs (cmd path replicas)" \
+    zirh_uart_regs 9 224 zirh_tmr_ff \
+    zirh_tmr_lib.v zirh_rs422.v zirh_uart_regs.v
+
+# --- check 8: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context

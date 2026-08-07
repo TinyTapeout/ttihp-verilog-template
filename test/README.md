@@ -27,6 +27,7 @@ make -B -f Makefile.rs422   # UART: checked against cocotbext-uart, fault inject
 make -B -f Makefile.seu     # SEU monitor: all three counters, injection ports, saturation
 make -B -f Makefile.tlm     # telemetry framer: frame format, checksum, backpressure
 make -B -f Makefile.bus     # ZIRH-2 bus: routing, watchdog timeout, fault injection
+make -B -f Makefile.uregs   # ZIRH-2 UART regs: cmd path, baud reg, tlm priority
 # (more will follow: Makefile.ecc, ...)
 ```
 

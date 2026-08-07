@@ -20,7 +20,7 @@ from cocotb.triggers import ClockCycles, RisingEdge, ReadOnly, with_timeout
 from cocotbext.uart import UartSource, UartSink
 
 CLK_PERIOD_NS = 40   # 25 MHz
-DIV = 20             # must match Makefile.rs422 override
+DIV = 20             # driven onto div_i at reset
 BAUD = int(1e9 / CLK_PERIOD_NS / DIV)
 
 FRAME_CYCLES = 10 * DIV  # start + 8 data + stop
@@ -28,6 +28,7 @@ FRAME_CYCLES = 10 * DIV  # start + 8 data + stop
 
 async def start(dut):
     cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, unit="ns").start())
+    dut.div_i.value = DIV
     dut.rst_n.value = 0
     dut.tx_data_i.value = 0
     dut.tx_valid_i.value = 0
