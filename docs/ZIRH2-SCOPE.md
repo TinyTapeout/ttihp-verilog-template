@@ -69,12 +69,47 @@ P2 - explicitly out unless P0+P1 land early and small:
 
 ## Flow work (not RTL, but on the critical path)
 
-1. **Placement constraints for TMR replicas.** The A/B experiment needs a
-   way to pin or fence replica instances in OpenROAD/LibreLane. Candidate
-   mechanisms (all unproven in the TT flow): instance-level place blockages,
-   hardening replicas as macros, or post-placement move scripts. Prototype
-   on ZIRH-1's netlist FIRST, before any ZIRH-2 RTL - if no mechanism
-   works, the headline experiment collapses and the scope reshapes.
+1. **Placement constraints for TMR replicas.** Prototype phase 1 is DONE
+   (2026-08-07), measured on ZIRH-1's final DEF with
+   scripts/replica_dist.py:
+
+   - All 387 same-bit replica trios in the design analyzed. Worst same-bit
+     separation 3.78 um, median ~7.3 um, maximum 12.2 um.
+   - 0% of same-bit pairs closer than 2 um; 25% closer than 5 um; 95%
+     closer than 10 um.
+   - Interpretation: the placer CLUSTERS same-bit trios rather than
+     scattering them - all three replicas feed one voter gate, and
+     wirelength optimization pulls them toward it. The clustering is
+     structural, so it will not improve on its own in ZIRH-2's denser
+     floorplan; if anything it worsens. No pair sits in the classic
+     charge-sharing range (<2 um), but a quarter sit in the 3.8-5 um band
+     that high-LET events can reach. ZIRH-1's ESCAPE counter puts physics
+     numbers on exactly this layout.
+   - Rejected idea, for the record: rotating bit order per replica in RTL
+     does not help, because the voter gate remains the shared attractor
+     for each trio regardless of bit naming.
+
+   Mechanism survey for enforcing separation (phase 2, to be tested):
+
+   - **Macro route - the only one available inside the TT flow today.**
+     LibreLane's MACROS config object supports pre-hardened macros with
+     explicit per-instance locations. Harden the chain replica
+     (zirh_tmr_ff, WIDTH=256) once as a macro, instantiate it three times
+     at chosen coordinates. Cost: a standalone LibreLane hardening flow in
+     CI (the TT action only hardens the whole tile), LEF/GDS artifacts in
+     the repo, timing through macro pins, and TT precheck rules for
+     macros. This is the path to prototype next.
+   - DEF GROUPS/REGIONS fences: OpenROAD's placers honor them, but
+     LibreLane exposes no configuration variable to define them and the
+     TT action does not accept custom flow steps. Available only with a
+     forked flow; keep as fallback.
+   - FP_DEF_TEMPLATE: copies pin locations and die area only, not
+     regions. Not applicable.
+
+   If the macro route fails in prototype, the A/B experiment reshapes
+   around what the flow can express - possibly two separate seu_mon
+   instances at opposite floorplan corners with the coarse separation
+   that IO-pin-driven placement gives for free.
 2. check_tmr.sh extended per block, as in ZIRH-1 (positive + negative).
 3. FPGA twin from day one - SERV firmware development against the twin,
    not against simulation only.
