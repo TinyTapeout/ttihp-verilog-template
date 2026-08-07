@@ -40,12 +40,16 @@ jobs:
         # --dockerized is how the TT flow gets its EDA tools too: the pip
         # package is only the driver, yosys/openroad/verilator live in
         # LibreLane's container image.
+        # Flag order matters: options must precede the config path, exactly
+        # as tt_tool.py builds the command - with the config first, the CLI
+        # ignored --docker-no-tty and the container died on a missing TTY.
         run: |
-          python -m librelane macro/config.json \
-            --dockerized --docker-no-tty \
-            --pdk ihp-sg13g2 \
+          python -m librelane \
+            --docker-no-tty --dockerized \
             --pdk-root "$PDK_ROOT" \
-            --run-tag macro-proto
+            --pdk ihp-sg13g2 \
+            --run-tag macro-proto \
+            macro/config.json
 
       - name: Sanity checks
         run: |
