@@ -1,0 +1,26 @@
+# =============================================================================
+# ZIRH-2 - unit test for zirh_bus (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.bus
+#
+# TIMEOUT_LOG2 is overridden to 4 (watchdog deadline 16 clocks) so the
+# timeout tests stay short. test_bus.py hardcodes the same value.
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/bus
+
+VERILOG_SOURCES += $(SRC_DIR)/zirh_tmr_lib.v
+VERILOG_SOURCES += $(SRC_DIR)/zirh_bus.v
+
+TOPLEVEL = zirh_bus
+COCOTB_TEST_MODULES = test_bus
+
+# Keep in sync with TIMEOUT in test_bus.py
+TIMEOUT_LOG2 ?= 4
+COMPILE_ARGS += -Pzirh_bus.TIMEOUT_LOG2=$(TIMEOUT_LOG2)
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

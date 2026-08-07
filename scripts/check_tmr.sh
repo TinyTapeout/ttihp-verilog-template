@@ -175,7 +175,14 @@ run_check "zirh_tlm      (framer control replicas)" \
     zirh_tlm 6 130 zirh_tmr_ff \
     zirh_tmr_lib.v zirh_tlm.v
 
-# --- check 6: the module that actually gets taped out ----------------------
+# --- check 6: the ZIRH-2 bus interconnect ----------------------------------
+# zirh_bus at the default TIMEOUT_LOG2=6: the ack watchdog is the only
+# state - 1 zirh_tmr_ff paramod x 3 replicas, 6x3 = 18 + 1 err = 19 FFs.
+run_check "zirh_bus      (watchdog replicas)" \
+    zirh_bus 3 19 zirh_tmr_ff \
+    zirh_tmr_lib.v zirh_bus.v
+
+# --- check 7: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context
