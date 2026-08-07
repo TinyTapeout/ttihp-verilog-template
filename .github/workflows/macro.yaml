@@ -37,8 +37,12 @@ jobs:
         run: pip install librelane==3.0.5
 
       - name: Harden the macro
+        # --dockerized is how the TT flow gets its EDA tools too: the pip
+        # package is only the driver, yosys/openroad/verilator live in
+        # LibreLane's container image.
         run: |
           python -m librelane macro/config.json \
+            --dockerized --docker-no-tty \
             --pdk ihp-sg13g2 \
             --pdk-root "$PDK_ROOT" \
             --run-tag macro-proto
