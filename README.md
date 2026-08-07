@@ -178,8 +178,14 @@ zirh/
   src/                   RTL: tmr_lib, clk_rst, rs422, seu_mon, tlm, top
   test/                  cocotb suites + per-block makefiles
   scripts/check_tmr.sh   synthesis integrity check
+  host/zirh_ground.py    ground station: telemetry decoder (serial/file/selftest)
   docs/info.md           datasheet
 ```
+
+The ground station decodes the mixed telemetry+echo stream, validates
+checksums, tracks sequence gaps and counter deltas, and logs CSV for beam
+campaigns. `python3 host/zirh_ground.py --selftest` runs it against a
+hostile synthetic stream with no hardware.
 
 ## Status
 
