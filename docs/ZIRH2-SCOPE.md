@@ -91,14 +91,23 @@ P2 - explicitly out unless P0+P1 land early and small:
 
    Mechanism survey for enforcing separation (phase 2, to be tested):
 
-   - **Macro route - the only one available inside the TT flow today.**
-     LibreLane's MACROS config object supports pre-hardened macros with
-     explicit per-instance locations. Harden the chain replica
-     (zirh_tmr_ff, WIDTH=256) once as a macro, instantiate it three times
-     at chosen coordinates. Cost: a standalone LibreLane hardening flow in
-     CI (the TT action only hardens the whole tile), LEF/GDS artifacts in
-     the repo, timing through macro pins, and TT precheck rules for
-     macros. This is the path to prototype next.
+   - **Macro route - the only one available inside the TT flow today,
+     and PROVEN in phase 3 (2026-08-07).** The macro.yaml workflow hardens
+     zirh_tmr_ff256 standalone with the same tool stack the TT action uses
+     (librelane 3.0.5, dockerized, same PDK hash) and delivers LEF + GDS.
+     Measured on the hardened macro: die 50.7k um2, 52% utilization,
+     setup +14.1 ns / hold +3.5 ns, DRC/LVS/antenna 0, and exactly 256
+     flops in the final netlist.
+
+     The honest cost number: one replica as a macro occupies ~50.7k um2 of
+     die against ~12.5k um2 of flop area flat - the 514 signal pins make
+     the block pin-limited, roughly a 4x area premium for separability.
+     Three constrained replicas (chain A of the A/B experiment) would take
+     ~152k um2, half of an 8x2 tile's usable area at N=256. Consequence:
+     the constrained chain must be shorter than 256 bits (N=64..128, area
+     scales roughly with pin count) OR the premium is accepted and the
+     rest of the chip shrinks. This is now a sizing decision with real
+     numbers behind it, gated on nothing.
    - DEF GROUPS/REGIONS fences: OpenROAD's placers honor them, but
      LibreLane exposes no configuration variable to define them and the
      TT action does not accept custom flow steps. Available only with a
