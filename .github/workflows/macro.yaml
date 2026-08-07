@@ -1,0 +1,76 @@
+# =============================================================================
+# ZIRH - macro hardening prototype (ZIRH-2 placement work, phase 3)
+#
+# Hardens one TMR chain replica (zirh_tmr_ff256) as a standalone macro with
+# LibreLane on ihp-sg13g2 and publishes GDS/LEF/netlist as artifacts.
+# Proves (or disproves) the macro route for TMR replica separation - see
+# docs/ZIRH2-SCOPE.md. Manual trigger only: this is a prototype, not a
+# gate for the ZIRH-1 tapeout.
+#
+# LibreLane version and PDK mechanics deliberately mirror
+# TinyTapeout/tt-gds-action@ttihp26b (pip install librelane==3.0.5,
+# PDK auto-fetched into PDK_ROOT) so the macro is built by the same tool
+# stack that will later consume it.
+# =============================================================================
+
+name: macro
+
+on:
+  workflow_dispatch:
+
+jobs:
+  harden-macro:
+    runs-on: ubuntu-24.04
+    env:
+      PDK_ROOT: /home/runner/pdk
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install LibreLane
+        run: pip install librelane==3.0.5
+
+      - name: Harden the macro
+        run: |
+          python -m librelane macro/config.json \
+            --pdk ihp-sg13g2 \
+            --pdk-root "$PDK_ROOT" \
+            --run-tag macro-proto
+
+      - name: Sanity checks
+        run: |
+          FINAL=macro/runs/macro-proto/final
+          echo "=== flop count in the hardened macro netlist ==="
+          DFF=$(grep -c "sg13g2_dfrbpq" $FINAL/pnl/zirh_tmr_ff256.pnl.v)
+          echo "sg13g2_dfrbpq instances: $DFF (expected 256)"
+          test "$DFF" -eq 256
+
+          echo "=== key metrics ==="
+          python3 - <<'EOF'
+          import json
+          m = json.load(open('macro/runs/macro-proto/final/metrics.json'))
+          for k in ('design__die__area', 'design__instance__utilization',
+                    'timing__setup__ws', 'timing__hold__ws',
+                    'route__drc_errors', 'magic__drc_error__count',
+                    'design__lvs_error__count'):
+              if k in m:
+                  print(f"  {k:40s} {m[k]}")
+          EOF
+
+          echo "=== deliverables ==="
+          ls -la $FINAL/gds/ $FINAL/lef/ $FINAL/nl/ 2>/dev/null
+
+      - name: Upload macro artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macro_zirh_tmr_ff256
+          path: |
+            macro/runs/macro-proto/final/*
+            macro/runs/macro-proto/*.log

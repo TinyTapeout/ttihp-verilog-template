@@ -1,0 +1,24 @@
+{
+  "//": "LibreLane config for hardening one TMR chain replica as a macro.",
+  "//": "ZIRH-2 placement prototype - run by .github/workflows/macro.yaml.",
+
+  "DESIGN_NAME": "zirh_tmr_ff256",
+
+  "//": "Library first: it defines zirh_tmr_ff, which the wrapper instantiates.",
+  "VERILOG_FILES": [
+    "dir::../src/zirh_tmr_lib.v",
+    "dir::zirh_tmr_ff256.v"
+  ],
+
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20,
+
+  "//": "514 signal pins around a ~13k um2 flop core: the block is",
+  "//": "pin-limited, so keep utilization low and let the perimeter grow.",
+  "FP_SIZING": "relative",
+  "FP_CORE_UTIL": 40,
+
+  "//": "Same deviation as the top-level config, same reason: the",
+  "//": "keep_hierarchy module protecting the flops trips the checker.",
+  "ERROR_ON_UNMAPPED_CELLS": 0
+}
