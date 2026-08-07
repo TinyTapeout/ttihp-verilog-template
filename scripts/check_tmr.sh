@@ -65,6 +65,7 @@ run_check() {
         hierarchy -check -top ${top};
         synth -top ${top} -flatten -run begin:fine;
         opt -full;
+        memory_map;
         techmap;
         opt -full;
         select -count t:*${rep_mod}*;
@@ -193,7 +194,14 @@ run_check "zirh_uart_regs (cmd path replicas)" \
     zirh_uart_regs 9 224 zirh_tmr_ff \
     zirh_tmr_lib.v zirh_rs422.v zirh_uart_regs.v
 
-# --- check 8: the module that actually gets taped out ----------------------
+# --- check 8: the ZIRH-2 ECC RAM --------------------------------------------
+# zirh_ecc_ram: deliberately ZERO TMR replicas - the protection is the
+# SECDED code itself. 32 words x 39 stored bits = 1248 + 2 event FFs = 1250.
+run_check "zirh_ecc_ram  (SECDED, no TMR by design)" \
+    zirh_ecc_ram 0 1250 zirh_tmr_ff \
+    zirh_ecc_ram.v
+
+# --- check 9: the module that actually gets taped out ----------------------
 # The two checks above verify the blocks in isolation. This one verifies the
 # top level, which is the only netlist that matters: a block can survive on
 # its own and still be optimised away once it is instantiated in a context

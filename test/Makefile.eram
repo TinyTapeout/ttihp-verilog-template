@@ -1,0 +1,18 @@
+# =============================================================================
+# ZIRH-2 - unit test for zirh_ecc_ram (no TT harness, DUT driven directly)
+#
+#   make -C test -f Makefile.eram
+# =============================================================================
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+SRC_DIR = $(PWD)/../src
+
+SIM_BUILD = sim_build/eram
+
+VERILOG_SOURCES += $(SRC_DIR)/zirh_ecc_ram.v
+
+TOPLEVEL = zirh_ecc_ram
+COCOTB_TEST_MODULES = test_ecc_ram
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

@@ -28,6 +28,7 @@ make -B -f Makefile.seu     # SEU monitor: all three counters, injection ports, 
 make -B -f Makefile.tlm     # telemetry framer: frame format, checksum, backpressure
 make -B -f Makefile.bus     # ZIRH-2 bus: routing, watchdog timeout, fault injection
 make -B -f Makefile.uregs   # ZIRH-2 UART regs: cmd path, baud reg, tlm priority
+make -B -f Makefile.eram    # ZIRH-2 ECC RAM: SECDED correct/detect, scrub, byte enables
 # (more will follow: Makefile.ecc, ...)
 ```
 
