@@ -1,7 +1,7 @@
 # Tiny Tapeout project information
 project:
-  title:        "Core"      # Project title
-  author:       "Sai"      # Your name
+  title:        "test"      # Project title
+  author:       "jeev"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  ""      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
@@ -11,7 +11,7 @@ project:
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_core"
+  top_module:  "tt_um_pin_core"
 
   # List your project's source files here.
   # Source files must be in ./src and you must list each source file separately, one per line.
@@ -23,18 +23,18 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: ""
-  ui[1]: ""
-  ui[2]: ""
-  ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  ui[0]: "data in"
+  ui[1]: "data in"
+  ui[2]: "data in"
+  ui[3]: "data in"
+  ui[4]: "data in"
+  ui[5]: "data in"
+  ui[6]: "data in"
+  ui[7]: "data in"
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
+  uo[0]: "tx"
+  uo[1]: "busy"
   uo[2]: ""
   uo[3]: ""
   uo[4]: ""
@@ -43,7 +43,7 @@ pinout:
   uo[7]: ""
 
   # Bidirectional pins
-  uio[0]: ""
+  uio[0]: "start"
   uio[1]: ""
   uio[2]: ""
   uio[3]: ""
